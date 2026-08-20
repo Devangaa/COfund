@@ -15,16 +15,17 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
+            $table->enum('role', ['backer', 'creator', 'admin'])->default('backer');
+            $table->decimal('balance', 15, 2)->default(0);
+            $table->boolean('is_suspended')->default(false);
+            $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('suspended_at')->nullable();
             $table->timestamps();
+            $table->rememberToken();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');
