@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('campaign_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->text('content');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

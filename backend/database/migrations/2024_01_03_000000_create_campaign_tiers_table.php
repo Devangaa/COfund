@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('quota')->default(0);
             $table->integer('remaining_quota')->default(0);
             $table->text('reward_description');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

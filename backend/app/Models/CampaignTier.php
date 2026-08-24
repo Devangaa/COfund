@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CampaignTier extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         "campaign_id",
@@ -30,5 +31,18 @@ class CampaignTier extends Model
     public function backings()
     {
         return $this->hasMany(Backing::class, "tier_id");
+    }
+
+    public function isUnlimited(): bool
+    {
+        return $this->quota === 0;
+    }
+
+    public function hasAvailability(): bool
+    {
+        if ($this->isUnlimited()) {
+            return true;
+        }
+        return $this->remaining_quota > 0;
     }
 }

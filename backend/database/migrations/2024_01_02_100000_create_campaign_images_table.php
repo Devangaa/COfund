@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('campaign_id')->constrained()->cascadeOnDelete();
             $table->string('url');
             $table->boolean('is_primary')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

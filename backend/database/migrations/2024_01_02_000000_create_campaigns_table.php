@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('rejection_note')->nullable();
             $table->foreignId('reviewed_by')->nullable()->constrained('users');
             $table->timestamp('reviewed_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

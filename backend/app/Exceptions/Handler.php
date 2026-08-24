@@ -8,6 +8,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -61,18 +62,21 @@ class Handler extends ExceptionHandler
 
         if ($e instanceof AuthenticationException) {
             return response()->json([
+                'success' => false,
                 'message' => $e->getMessage() ?: 'Unauthenticated.',
             ], 401);
         }
 
         if ($e instanceof AuthorizationException) {
             return response()->json([
+                'success' => false,
                 'message' => $e->getMessage() ?: 'This action is unauthorized.',
             ], 403);
         }
 
         if ($e instanceof ValidationException) {
             return response()->json([
+                'success' => false,
                 'message' => $e->getMessage() ?: 'The given data was invalid.',
                 'errors' => $e->errors(),
             ], $e->status);
@@ -82,11 +86,20 @@ class Handler extends ExceptionHandler
             $status = $e->getStatusCode();
 
             return response()->json([
+                'success' => false,
                 'message' => $e->getMessage() ?: (Response::$statusTexts[$status] ?? 'Error'),
             ], $status);
         }
 
+        if ($e instanceof \Symfony\Component\Routing\Exception\RouteNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Route or resource not found.',
+            ], 403);
+        }
+
         return response()->json([
+            'success' => false,
             'message' => $e->getMessage() ?: 'Server Error',
         ], 500);
     }

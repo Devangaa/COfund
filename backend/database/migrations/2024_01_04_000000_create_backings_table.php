@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('tier_id')->nullable()->constrained('campaign_tiers');
             $table->decimal('amount', 15, 2);
             $table->enum('status', ['pending', 'completed', 'refunded'])->default('pending');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

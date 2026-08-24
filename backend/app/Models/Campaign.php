@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Campaign extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         "user_id",
@@ -24,6 +26,22 @@ class Campaign extends Model
         "reviewed_by",
         "reviewed_at",
     ];
+
+    protected static function booted()
+    {
+        static::saving(function (self $campaign) {
+            if (empty($campaign->slug)) {
+                $campaign->slug = Str::slug($campaign->title);
+            }
+
+            $originalSlug = $campaign->slug;
+            $counter = 1;
+            while (static::withoutTrashed()->where('slug', $campaign->slug)->where('id', '!=', $campaign->id)->exists()) {
+                $campaign->slug = $originalSlug . '-' . $counter;
+                $counter++;
+            }
+        });
+    }
 
     protected $casts = [
         "target_amount" => "decimal:2",
