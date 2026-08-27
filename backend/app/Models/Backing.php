@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BackingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,15 +12,16 @@ class Backing extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        "user_id",
-        "campaign_id",
-        "tier_id",
-        "amount",
-        "status",
+        'user_id',
+        'campaign_id',
+        'tier_id',
+        'amount',
+        'status',
     ];
 
     protected $casts = [
-        "amount" => "decimal:2",
+        'amount' => 'decimal:2',
+        'status' => BackingStatus::class,
     ];
 
     public function backer()

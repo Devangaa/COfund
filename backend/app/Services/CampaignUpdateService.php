@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\CampaignStatus;
 use App\Models\Campaign;
 use App\Models\CampaignUpdate;
 use App\Models\Notification;
@@ -11,7 +12,7 @@ class CampaignUpdateService
 {
     public function create(Campaign $campaign, array $data): CampaignUpdate
     {
-        if ($campaign->status !== 'active') {
+        if ($campaign->status !== CampaignStatus::ACTIVE) {
             throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException('Campaign update can only be posted when campaign is active');
         }
 

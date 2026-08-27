@@ -2,6 +2,17 @@
 
 namespace App\Providers;
 
+use App\Events\BackingCreated;
+use App\Events\CampaignApproved;
+use App\Events\CampaignFunded;
+use App\Events\CampaignRejected;
+use App\Events\DepositProcessed;
+use App\Events\WithdrawalProcessed;
+use App\Listeners\HandleBackingCreated;
+use App\Listeners\HandleCampaignApproved;
+use App\Listeners\HandleCampaignFunded;
+use App\Listeners\HandleCampaignRejected;
+use App\Listeners\HandleWalletTransaction;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -9,28 +20,35 @@ use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
-    /**
-     * The event to listener mappings for the application.
-     *
-     * @var array<class-string, array<int, class-string>>
-     */
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        CampaignFunded::class => [
+            HandleCampaignFunded::class,
+        ],
+        CampaignApproved::class => [
+            HandleCampaignApproved::class,
+        ],
+        CampaignRejected::class => [
+            HandleCampaignRejected::class,
+        ],
+        BackingCreated::class => [
+            HandleBackingCreated::class,
+        ],
+        DepositProcessed::class => [
+            [HandleWalletTransaction::class, 'handleDeposit'],
+        ],
+        WithdrawalProcessed::class => [
+            [HandleWalletTransaction::class, 'handleWithdrawal'],
+        ],
     ];
 
-    /**
-     * Register any events for your application.
-     */
     public function boot(): void
     {
         //
     }
 
-    /**
-     * Determine if events and listeners should be automatically discovered.
-     */
     public function shouldDiscoverEvents(): bool
     {
         return false;

@@ -16,7 +16,7 @@ class AuthService
     public function register(array $data): User
     {
         $data["password"] = Hash::make($data["password"]);
-        $data["role"] = $data["role"] ?? "backer";
+        $data["role"] = "backer";
         $data["balance"] = 0;
 
         $user = User::create($data);

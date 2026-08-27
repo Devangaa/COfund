@@ -13,6 +13,7 @@ class CampaignUpdateResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'content' => $this->content,
+            'content_html' => $this->content_html,
             'created_at' => $this->created_at->toDateTimeString(),
         ];
     }

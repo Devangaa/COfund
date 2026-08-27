@@ -16,6 +16,7 @@ class CampaignResource extends JsonResource
             "title" => $this->title,
             "slug" => $this->slug,
             "description" => $this->description,
+            "description_html" => $this->description_html,
             "target_amount" => $this->target_amount,
             "collected_amount" => $this->collected_amount,
             "progress_percentage" => $this->target_amount > 0

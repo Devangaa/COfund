@@ -12,11 +12,19 @@ class StoreCampaignUpdateRequest extends FormRequest
         return $campaign && $campaign->user_id === auth()->id();
     }
 
+    protected function prepareForValidation(): void
+    {
+        $campaign = $this->route('campaign');
+        if ($campaign && $campaign->user_id !== auth()->id()) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
+    }
+
     public function rules(): array
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string'],
+            'content' => ['required', 'string', 'max:10000'],
         ];
     }
 }

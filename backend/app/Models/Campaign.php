@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\CampaignStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Parsedown;
 
 class Campaign extends Model
 {
@@ -48,6 +50,7 @@ class Campaign extends Model
         "collected_amount" => "decimal:2",
         "deadline" => "date",
         "reviewed_at" => "datetime",
+        "status" => CampaignStatus::class,
     ];
 
     public function creator()
@@ -80,8 +83,20 @@ class Campaign extends Model
         return $this->hasMany(CampaignUpdate::class);
     }
 
+    public function getDescriptionHtmlAttribute()
+    {
+        $parsedown = new Parsedown();
+        $parsedown->setSafeMode(true);
+        return $parsedown->text($this->description ?? '');
+    }
+
     public function backings()
     {
         return $this->hasMany(Backing::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 }
