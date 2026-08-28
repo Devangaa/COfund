@@ -45,28 +45,6 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        RateLimiter::for('login', function (Request $request) {
-            return Limit::perMinute(5)
-                ->by($request->email . $request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Too many login attempts. Please try again in 1 minute.',
-                    ], 429);
-                });
-        });
-
-        RateLimiter::for('register', function (Request $request) {
-            return Limit::perMinute(3)
-                ->by($request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Too many registration attempts. Please try again later.',
-                    ], 429);
-                });
-        });
-
         RateLimiter::for('password.request', function (Request $request) {
             return Limit::perMinute(5)
                 ->by($request->input('email', '') . $request->ip())

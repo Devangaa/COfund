@@ -26,7 +26,7 @@ class HandleCampaignApproved
         ]);
 
         if ($creator->email_verified_at) {
-            Mail::send(new CampaignApprovedMail($creator, $campaign));
+            Mail::to($creator->email)->queue(new CampaignApprovedMail($creator, $campaign));
         }
     }
 }

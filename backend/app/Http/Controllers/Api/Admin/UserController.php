@@ -43,8 +43,9 @@ class UserController extends Controller
             });
         }
 
-        $perPage = min($request->query('per_page', 15), 50);
-        $users = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = min(max($perPage, 1), 50);
+        $users = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'success' => true,

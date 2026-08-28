@@ -27,7 +27,7 @@ class DisburseCampaignJob implements ShouldQueue
 
         $creator = $this->campaign->creator;
         $collected = (float) $this->campaign->collected_amount;
-        $platformFee = $collected * 0.05;
+        $platformFee = $collected * config('cofund.platform_fee', 0.05);
         $disbursement = $collected - $platformFee;
 
         Notification::create([
@@ -44,7 +44,7 @@ class DisburseCampaignJob implements ShouldQueue
         ]);
 
         if ($creator->email_verified_at) {
-            Mail::send(new \App\Mail\DisbursementProcessed($creator, $this->campaign, $disbursement, $platformFee));
+            Mail::to($creator->email)->queue(new \App\Mail\DisbursementProcessed($creator, $this->campaign, $disbursement, $platformFee));
         }
     }
 }

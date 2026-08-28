@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Campaign;
 use App\Models\Backing;
 use App\Models\Transaction;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Illuminate\Validation\ValidationException;
 
 class UserService
@@ -13,13 +14,11 @@ class UserService
     public function suspend(User $user, User $admin): void
     {
         if ($user->id === $admin->id) {
-            throw ValidationException::withMessages([
-                'user' => 'You cannot suspend yourself',
-            ]);
+            throw new ConflictHttpException('You cannot suspend yourself');
         }
 
         if ($user->is_suspended) {
-            return;
+            throw new ConflictHttpException('User is already suspended');
         }
 
         $user->update([
@@ -33,7 +32,7 @@ class UserService
     public function unsuspend(User $user): void
     {
         if (!$user->is_suspended) {
-            return;
+            throw new ConflictHttpException('User is not suspended');
         }
 
         $user->update([

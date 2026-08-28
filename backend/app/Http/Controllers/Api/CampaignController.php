@@ -35,7 +35,13 @@ class CampaignController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'page' => ['nullable', 'integer', 'min:1'],
-        ]);        $user = Auth::guard('sanctum')->user();
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
+        ]);
+
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = min(max($perPage, 1), 50);
+
+        $user = $request->user();
         $query = Campaign::query()
             ->with(['creator', 'category'])
             ->withCount('updates');
@@ -105,7 +111,7 @@ class CampaignController extends Controller
             $query->orderBy('collected_amount', 'desc');
         }
 
-        $campaigns = $query->paginate(12);
+        $campaigns = $query->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'success' => true,

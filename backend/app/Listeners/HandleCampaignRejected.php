@@ -27,7 +27,7 @@ class HandleCampaignRejected
         ]);
 
         if ($creator->email_verified_at) {
-            Mail::send(new CampaignRejectedMail($creator, $campaign));
+            Mail::to($creator->email)->queue(new CampaignRejectedMail($creator, $campaign));
         }
     }
 }

@@ -18,9 +18,12 @@ class TransactionController extends Controller
         $request->validate([
             'type' => ['nullable', 'string', 'in:payment,refund,disbursement,platform_fee,deposit,withdrawal'],
             'status' => ['nullable', 'string', 'in:pending,success,failed'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'user_id' => $user->role === 'admin' ? ['nullable', 'integer', 'exists:users,id'] : ['prohibited'],
             'sort' => ['nullable', 'string', 'in:latest,oldest'],
             'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
         $query = Transaction::query();
@@ -41,11 +44,20 @@ class TransactionController extends Controller
             $query->where('status', $request->query('status'));
         }
 
+        if ($request->filled('start_date')) {
+            $query->where('created_at', '>=', $request->query('start_date'));
+        }
+
+        if ($request->filled('end_date')) {
+            $query->where('created_at', '<=', $request->query('end_date'));
+        }
+
         $sort = $request->query('sort', 'latest');
         $query->orderBy('created_at', $sort === 'latest' ? 'desc' : 'asc');
 
-        $perPage = (int) $request->query('per_page', 12);
-        $transactions = $query->paginate($perPage);
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = min(max($perPage, 1), 50);
+        $transactions = $query->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'success' => true,

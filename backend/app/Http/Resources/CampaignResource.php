@@ -30,7 +30,9 @@ class CampaignResource extends JsonResource
             "images" => CampaignImageResource::collection($this->whenLoaded('images')),
             "tiers" => CampaignTierResource::collection($this->whenLoaded('tiers')),
             "updates" => CampaignUpdateResource::collection($this->whenLoaded('updates')),
-            "updates_count" => $this->updates_count ?? $this->updates()->count(),
+            "updates_count" => $this->whenLoaded('updates')
+                ? $this->updates_count ?? $this->updates->count()
+                : null,
         ];
     }
 }

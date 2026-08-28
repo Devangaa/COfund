@@ -23,20 +23,23 @@ class BackingController extends Controller
     {
         $user = $request->user();
 
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = min(max($perPage, 1), 50);
+
         $query = Backing::with(['campaign.creator', 'tier']);
 
         if ($user->role === User::ROLE_ADMIN) {
-            $backings = $query->latest()->paginate(12);
+            $backings = $query->latest()->paginate($perPage)->appends($request->query());
         } elseif ($user->role === User::ROLE_CREATOR) {
             $backings = $query
                 ->where('user_id', $user->id)
                 ->latest()
-                ->paginate(12);
+                ->paginate($perPage)->appends($request->query());
         } else {
             $backings = $query
                 ->where('user_id', $user->id)
                 ->latest()
-                ->paginate(12);
+                ->paginate($perPage)->appends($request->query());
         }
 
         return response()->json([
@@ -88,10 +91,13 @@ class BackingController extends Controller
             ], 403);
         }
 
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = min(max($perPage, 1), 50);
+
         $backings = Backing::where('campaign_id', $campaign->id)
             ->with(['backer', 'tier'])
             ->latest()
-            ->paginate(12);
+            ->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'success' => true,

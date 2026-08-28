@@ -47,7 +47,7 @@ class HandleBackingCreated
 
         // Email ke backer (jika email terverifikasi)
         if ($backer->email_verified_at) {
-            Mail::send(new BackingConfirmation($backer, $campaign, $backing));
+            Mail::to($backer->email)->queue(new BackingConfirmation($backer, $campaign, $backing));
         }
     }
 }

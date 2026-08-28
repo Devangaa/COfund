@@ -42,6 +42,13 @@ class AuthService
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        if ($user->is_suspended) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                "email" => ["This account has been suspended."],
+            ])->status(403);
+        }
+
         $token = $user->createToken("auth-token")->plainTextToken;
 
         return [

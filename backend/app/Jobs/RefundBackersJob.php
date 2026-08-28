@@ -48,7 +48,7 @@ class RefundBackersJob implements ShouldQueue
             ]);
 
             if ($user && $user->email_verified_at) {
-                Mail::send(new RefundProcessed($user, $this->campaign, $backing->amount));
+                Mail::to($user->email)->queue(new RefundProcessed($user, $this->campaign, $backing->amount));
             }
         }
     }

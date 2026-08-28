@@ -7,11 +7,15 @@ use App\Events\CampaignApproved;
 use App\Events\CampaignFunded;
 use App\Events\CampaignRejected;
 use App\Events\DepositProcessed;
+use App\Events\UserSuspended;
+use App\Events\UserUnsuspended;
 use App\Events\WithdrawalProcessed;
 use App\Listeners\HandleBackingCreated;
 use App\Listeners\HandleCampaignApproved;
 use App\Listeners\HandleCampaignFunded;
 use App\Listeners\HandleCampaignRejected;
+use App\Listeners\HandleUserSuspended;
+use App\Listeners\HandleUserUnsuspended;
 use App\Listeners\HandleWalletTransaction;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -41,6 +45,12 @@ class EventServiceProvider extends ServiceProvider
         ],
         WithdrawalProcessed::class => [
             [HandleWalletTransaction::class, 'handleWithdrawal'],
+        ],
+        UserSuspended::class => [
+            HandleUserSuspended::class,
+        ],
+        UserUnsuspended::class => [
+            HandleUserUnsuspended::class,
         ],
     ];
 

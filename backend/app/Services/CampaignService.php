@@ -74,6 +74,14 @@ class CampaignService
 
     public function approve(Campaign $campaign, User $admin): Campaign
     {
+        if ($campaign->status !== CampaignStatus::REVIEW) {
+            throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException(
+                $campaign->status === CampaignStatus::ACTIVE
+                    ? 'Campaign already active'
+                    : 'Only campaigns in review can be approved'
+            );
+        }
+
         $campaign->update([
             'status' => CampaignStatus::ACTIVE,
             'reviewed_by' => $admin->id,
