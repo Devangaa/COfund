@@ -75,4 +75,19 @@ class AuthService
             event(new PasswordReset($user));
         });
     }
+
+    public function upgradeToCreator(User $user, array $data): User
+    {
+        if ($user->role !== 'backer') {
+            throw ValidationException::withMessages([
+                'role' => ['Only backers can upgrade to creator role.'],
+            ])->status(409);
+        }
+
+        $user->update([
+            'role' => 'creator',
+        ]);
+
+        return $user->fresh();
+    }
 }

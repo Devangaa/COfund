@@ -1,11 +1,25 @@
-<script setup></script>
+<script setup>
+import { onMounted } from 'vue'
+import { useAuthStore } from '@/stores/useAuthStore'
+import GlobalToastContainer from '@/components/common/GlobalToastContainer.vue'
+import GlobalConfirmModal from '@/components/common/GlobalConfirmModal.vue'
+
+const authStore = useAuthStore()
+
+onMounted(async () => {
+  if (authStore.token) {
+    await authStore.fetchMe()
+  }
+})
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <RouterView />
+  <!-- Custom Reactive Popups -->
+  <GlobalToastContainer />
+  <GlobalConfirmModal />
 </template>
 
-<style scoped></style>
+<style>
+/* Global styling handled by main.css and tailwind */
+</style>

@@ -327,6 +327,68 @@ Middleware `verified` dilindungi pada route yang relevan.
 3. Laravel Password Broker otomatis memverifikasi token dan memperbarui password
 4. Event `PasswordReset` dipicu setelah berhasil
 
+### Upgrade Backer ke Creator
+
+**Endpoint:** `POST /api/v1/upgrade-to-creator`
+
+**Middleware:** `auth:sanctum`
+
+**Deskripsi:** Memungkinkan backer untuk upgrade role mereka menjadi creator. Hanya backer yang dapat menggunakan endpoint ini.
+
+**Request Body:**
+
+```json
+{
+  "reason": "Saya ingin membuat kampanye untuk mendanai proyek inovatif saya"
+}
+```
+
+**Parameters:**
+- `reason` (required, string, max 500): Alasan mengapa user ingin menjadi creator
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "creator",
+    "email_verified_at": "2026-08-29T10:00:00Z",
+    "balance": "100000.00",
+    "is_suspended": false
+  },
+  "message": "Upgraded to creator successfully"
+}
+```
+
+**Error Response (409):**
+
+```json
+{
+  "success": false,
+  "message": "Only backers can upgrade to creator role."
+}
+```
+
+**Error Response (422):**
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "reason": ["Alasan upgrade ke creator wajib diisi"]
+  }
+}
+```
+
+**Validasi:**
+- Hanya user dengan role `backer` yang dapat upgrade
+- Reason field wajib diisi dan maksimal 500 karakter
+
 ---
 
 ## 5. Peran Pengguna & Matriks Akses Global
@@ -348,6 +410,7 @@ Middleware `verified` dilindungi pada route yang relevan.
 | Login | ✓ | ✓ | ✓ | ✓ |
 | Logout | ✓ | ✓ | ✓ | ✓ |
 | Forgot/Reset Password | ✓ | ✓ | ✓ | ✓ |
+| Upgrade to Creator | - | ✓ | - | - |
 | **Kampanye** | | | | |
 | List kampanye publik | ✓ | ✓ | ✓ | ✓ |
 | Detail kampanye | ✓ | ✓ | ✓ | ✓ |
@@ -504,6 +567,7 @@ Handler khusul ini memastikan semua exception pada route API mengembalikan respo
 | POST | `/api/v1/login` | *(none)* | Login dan dapatkan token | Auth |
 | POST | `/api/v1/logout` | `auth:sanctum` | Cabut token | Auth |
 | GET | `/api/v1/me` | `auth:sanctum` | Dapatkan profil pengguna | Auth |
+| POST | `/api/v1/upgrade-to-creator` | `auth:sanctum` | Upgrade backer menjadi creator | Auth |
 | POST | `/api/v1/email/resend` | `auth:sanctum` | Kirim ulang verifikasi email | Auth |
 | POST | `/api/v1/forgot-password` | `throttle:password.request` | Kirim link reset password | Auth |
 | POST | `/api/v1/reset-password` | `throttle:password.request` | Reset password dengan token | Auth |

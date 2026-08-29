@@ -53,6 +53,13 @@ class BackingService
                 'reference' => 'mock_payment_' . now()->timestamp,
             ]);
 
+            // Deduct backer wallet balance
+            if ($backer->balance >= $data['amount']) {
+                $backer->decrement('balance', $data['amount']);
+            } elseif ($backer->balance > 0) {
+                $backer->update(['balance' => 0]);
+            }
+
             if ($tier && !$tier->isUnlimited()) {
                 $tier->decrement('remaining_quota');
             }
@@ -65,7 +72,7 @@ class BackingService
 
             event(new BackingCreated($campaign, $backer, $backing));
 
-            return $backing;;
+            return $backing;
         });
     }
 

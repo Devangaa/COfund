@@ -41,9 +41,9 @@ class CampaignController extends Controller
         $perPage = (int) $request->query('per_page', 10);
         $perPage = min(max($perPage, 1), 50);
 
-        $user = $request->user();
+        $user = $request->user() ?? auth('sanctum')->user();
         $query = Campaign::query()
-            ->with(['creator', 'category'])
+            ->with(['creator', 'category', 'images', 'tiers'])
             ->withCount('updates');
 
         if ($user && $user->role === 'creator') {

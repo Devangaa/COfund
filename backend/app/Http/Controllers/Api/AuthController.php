@@ -7,6 +7,7 @@ use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\UpgradeToCreatorRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Auth\Passwords\PasswordBroker as PasswordBrokerContract;
@@ -89,5 +90,16 @@ class AuthController extends Controller
                 "email" => [__($status)],
             ],
         ], 422);
+    }
+
+    public function upgradeToCreator(UpgradeToCreatorRequest $request): JsonResponse
+    {
+        $user = $this->authService->upgradeToCreator($request->user(), $request->validated());
+
+        return response()->json([
+            "success" => true,
+            "user" => new UserResource($user),
+            "message" => "Upgraded to creator successfully",
+        ]);
     }
 }

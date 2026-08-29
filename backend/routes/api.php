@@ -29,6 +29,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware("auth:sanctum")->group(function () {
         Route::post("/logout", [AuthController::class, "logout"])->name("logout");
         Route::get("/me", [AuthController::class, "me"])->name("me");
+        Route::post("/upgrade-to-creator", [AuthController::class, "upgradeToCreator"])->name("upgrade-to-creator");
         Route::post("/email/resend", function (Request $request) {
             if ($request->user()->hasVerifiedEmail()) {
                 return response()->json([
