@@ -17,7 +17,7 @@ class StoreCampaignRequest extends FormRequest
             'category_id' => ['required', 'exists:categories,id'],
             'title' => ['required', 'string', 'max:100'],
             'slug' => ['nullable', 'string', 'unique:campaigns,slug'],
-            'description' => ['required', 'string'],
+            'description' => ['required', 'string', 'max:10000'],
             'target_amount' => ['required', 'numeric', 'min:100000'],
             'deadline' => ['required', 'date', 'after:+7 days'],
             'video_url' => ['nullable', 'string', 'url'],

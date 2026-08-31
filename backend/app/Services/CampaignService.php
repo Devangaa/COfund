@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\CampaignStatus;
+use App\Events\CampaignApproved;
+use App\Events\CampaignRejected;
 use App\Models\Campaign;
 use App\Models\CampaignImage;
 use App\Models\CampaignTier;
@@ -28,8 +31,8 @@ class CampaignService
                 'target_amount' => $data['target_amount'],
                 'deadline' => $data['deadline'],
                 'video_url' => $data['video_url'] ?? null,
-                'status' => 'draft',
-            ]);
+            'status' => CampaignStatus::DRAFT,
+        ]);
 
             foreach ($images as $index => $file) {
                 $path = $file->store('campaigns', 'public');
@@ -65,34 +68,48 @@ class CampaignService
     public function submitForReview(Campaign $campaign): Campaign
     {
         $this->ensureEditable($campaign);
-        $campaign->update(['status' => 'review']);
+        $campaign->update(['status' => CampaignStatus::REVIEW]);
         return $campaign;
     }
 
     public function approve(Campaign $campaign, User $admin): Campaign
     {
+        if ($campaign->status !== CampaignStatus::REVIEW) {
+            throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException(
+                $campaign->status === CampaignStatus::ACTIVE
+                    ? 'Campaign already active'
+                    : 'Only campaigns in review can be approved'
+            );
+        }
+
         $campaign->update([
-            'status' => 'active',
+            'status' => CampaignStatus::ACTIVE,
             'reviewed_by' => $admin->id,
             'reviewed_at' => now(),
         ]);
+
+        event(new CampaignApproved($campaign));
+
         return $campaign;
     }
 
     public function reject(Campaign $campaign, User $admin, string $note): Campaign
     {
         $campaign->update([
-            'status' => 'draft',
+            'status' => CampaignStatus::DRAFT,
             'rejection_note' => $note,
             'reviewed_by' => $admin->id,
             'reviewed_at' => now(),
         ]);
+
+        event(new CampaignRejected($campaign));
+
         return $campaign;
     }
 
     public function forceFail(Campaign $campaign): Campaign
     {
-        $campaign->update(['status' => 'failed']);
+        $campaign->update(['status' => CampaignStatus::FAILED]);
         return $campaign;
     }
 
@@ -115,7 +132,7 @@ class CampaignService
 
     public function ensureEditable(Campaign $campaign): void
     {
-        if ($campaign->status !== 'draft') {
+        if ($campaign->status !== CampaignStatus::DRAFT) {
             throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException('Campaign can only be edited in draft status');
         }
     }

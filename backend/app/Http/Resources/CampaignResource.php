@@ -16,6 +16,7 @@ class CampaignResource extends JsonResource
             "title" => $this->title,
             "slug" => $this->slug,
             "description" => $this->description,
+            "description_html" => $this->description_html,
             "target_amount" => $this->target_amount,
             "collected_amount" => $this->collected_amount,
             "progress_percentage" => $this->target_amount > 0
@@ -29,7 +30,9 @@ class CampaignResource extends JsonResource
             "images" => CampaignImageResource::collection($this->whenLoaded('images')),
             "tiers" => CampaignTierResource::collection($this->whenLoaded('tiers')),
             "updates" => CampaignUpdateResource::collection($this->whenLoaded('updates')),
-            "updates_count" => $this->updates_count ?? $this->updates()->count(),
+            "updates_count" => $this->whenLoaded('updates')
+                ? $this->updates_count ?? $this->updates->count()
+                : null,
         ];
     }
 }

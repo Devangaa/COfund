@@ -11,6 +11,7 @@ use App\Models\Campaign;
 use App\Models\CampaignUpdate;
 use App\Services\CampaignUpdateService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CampaignUpdateController extends Controller
 {
@@ -19,9 +20,12 @@ class CampaignUpdateController extends Controller
     ) {
     }
 
-    public function index(Campaign $campaign): JsonResponse
+    public function index(Request $request, Campaign $campaign): JsonResponse
     {
-        $updates = $campaign->updates()->latest()->paginate(10);
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = min(max($perPage, 1), 50);
+
+        $updates = $campaign->updates()->latest()->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'success' => true,

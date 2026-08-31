@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,17 +13,19 @@ class Transaction extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        "user_id",
-        "backing_id",
-        "campaign_id",
-        "type",
-        "amount",
-        "status",
-        "reference",
+        'user_id',
+        'backing_id',
+        'campaign_id',
+        'type',
+        'amount',
+        'status',
+        'reference',
     ];
 
     protected $casts = [
-        "amount" => "decimal:2",
+        'amount' => 'decimal:2',
+        'type' => TransactionType::class,
+        'status' => TransactionStatus::class,
     ];
 
     public function user()

@@ -12,6 +12,12 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    public const ROLE_BACKER = 'backer';
+    public const ROLE_CREATOR = 'creator';
+    public const ROLE_ADMIN = 'admin';
+
+    public const ROLES = [self::ROLE_BACKER, self::ROLE_CREATOR, self::ROLE_ADMIN];
+
     protected $fillable = [
         "name",
         "email",
@@ -52,5 +58,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function notifications()
     {
         return $this->hasMany(Notification::class, "user_id");
+    }
+
+    public function deposit(float $amount): void
+    {
+        $this->increment('balance', $amount);
+    }
+
+    public function withdraw(float $amount): void
+    {
+        if ($this->balance < $amount) {
+            throw new \Exception('Insufficient balance');
+        }
+        $this->decrement('balance', $amount);
     }
 }

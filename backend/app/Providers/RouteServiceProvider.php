@@ -44,5 +44,16 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('password.request', function (Request $request) {
+            return Limit::perMinute(5)
+                ->by($request->input('email', '') . $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Too many password reset requests. Please try again in 1 minute.',
+                    ], 429);
+                });
+        });
     }
 }

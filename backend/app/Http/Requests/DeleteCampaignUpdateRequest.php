@@ -15,6 +15,15 @@ class DeleteCampaignUpdateRequest extends FormRequest
                $campaign->id === $update->campaign_id;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $campaign = $this->route('campaign');
+        $update = $this->route('update');
+        if ($campaign && $update && $campaign->id !== $update->campaign_id) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
+    }
+
     public function rules(): array
     {
         return [];

@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('backing_id')->nullable()->constrained('backings');
             $table->foreignId('campaign_id')->nullable()->constrained('campaigns');
-            $table->enum('type', ['payment', 'refund', 'disbursement', 'platform_fee']);
+            $table->enum('type', ['payment', 'refund', 'disbursement', 'platform_fee', 'deposit', 'withdrawal']);
             $table->decimal('amount', 15, 2);
             $table->enum('status', ['pending', 'success', 'failed'])->default('pending');
             $table->string('reference')->nullable();

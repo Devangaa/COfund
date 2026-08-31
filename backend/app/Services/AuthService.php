@@ -16,7 +16,7 @@ class AuthService
     public function register(array $data): User
     {
         $data["password"] = Hash::make($data["password"]);
-        $data["role"] = $data["role"] ?? "backer";
+        $data["role"] = "backer";
         $data["balance"] = 0;
 
         $user = User::create($data);
@@ -41,6 +41,13 @@ class AuthService
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        if ($user->is_suspended) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                "email" => ["This account has been suspended."],
+            ])->status(403);
+        }
 
         $token = $user->createToken("auth-token")->plainTextToken;
 
@@ -67,5 +74,20 @@ class AuthService
             $user->save();
             event(new PasswordReset($user));
         });
+    }
+
+    public function upgradeToCreator(User $user, array $data): User
+    {
+        if ($user->role !== 'backer') {
+            throw ValidationException::withMessages([
+                'role' => ['Only backers can upgrade to creator role.'],
+            ])->status(409);
+        }
+
+        $user->update([
+            'role' => 'creator',
+        ]);
+
+        return $user->fresh();
     }
 }
