@@ -12,13 +12,28 @@ export const useAuthStore = defineStore('auth', () => {
     (() => {
       try {
         const stored = localStorage.getItem('cofund_user')
-        return stored ? JSON.parse(stored) : null
+        const parsed = stored ? JSON.parse(stored) : null
+        return extractUser(parsed)
       } catch {
         return null
       }
     })()
   )
   const isLoading = ref(false)
+
+  // Helper to reliably extract the clean user object
+  function extractUser(data) {
+    if (!data) return null
+    if (data.data?.user) return data.data.user
+    if (data.user) return data.user
+    if (data.data && typeof data.data === 'object' && !Array.isArray(data.data) && 'id' in data.data) {
+      return data.data
+    }
+    if (typeof data === 'object' && 'id' in data) {
+      return data
+    }
+    return null
+  }
 
   // Getters / Computeds
   const isAuthenticated = computed(() => !!token.value && !!user.value)
@@ -28,15 +43,19 @@ export const useAuthStore = defineStore('auth', () => {
   const isBacker = computed(() => user.value?.role === 'backer' || !user.value?.role)
   const isEmailVerified = computed(() => !!user.value?.email_verified_at)
   const isSuspended = computed(() => !!user.value?.is_suspended)
-  const balance = computed(() => Number(user.value?.balance) || 0)
+  const balance = computed(() => {
+    if (!user.value) return 0
+    return Number(user.value.balance) || 0
+  })
 
   // Actions
   function setAuthData(newToken, newUser) {
+    const cleanUser = extractUser(newUser)
     token.value = newToken
-    user.value = newUser
+    user.value = cleanUser
     localStorage.setItem('cofund_token', newToken)
     localStorage.setItem('token', newToken)
-    localStorage.setItem('cofund_user', JSON.stringify(newUser))
+    localStorage.setItem('cofund_user', JSON.stringify(cleanUser))
   }
 
   function clearAuthData() {
@@ -53,10 +72,10 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authService.login(credentials)
       const data = response.data
       const authToken = data.token || data.data?.token
-      const authUser = data.user || data.data?.user || data.data
+      const authUser = extractUser(data)
 
       setAuthData(authToken, authUser)
-      toast.success(data.message || `Selamat datang kembali, ${authUser.name}!`)
+      toast.success(data.message || `Selamat datang kembali, ${authUser?.name || 'User'}!`)
       return { success: true, user: authUser }
     } catch (error) {
       return { success: false, error }
@@ -71,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authService.register(formData)
       const data = response.data
       const authToken = data.token || data.data?.token
-      const authUser = data.user || data.data?.user || data.data
+      const authUser = extractUser(data)
 
       if (authToken) {
         setAuthData(authToken, authUser)
@@ -89,9 +108,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return null
     try {
       const response = await authService.getMe()
-      const authUser = response.data.data || response.data.user || response.data
-      user.value = authUser
-      localStorage.setItem('cofund_user', JSON.stringify(authUser))
+      const authUser = extractUser(response.data)
+      if (authUser) {
+        user.value = authUser
+        localStorage.setItem('cofund_user', JSON.stringify(authUser))
+      }
       return authUser
     } catch {
       clearAuthData()
@@ -128,7 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authService.upgradeToCreator({ reason })
       const data = response.data
-      const updatedUser = data.user || data.data?.user || data.data
+      const updatedUser = extractUser(data)
 
       if (updatedUser) {
         user.value = { ...user.value, ...updatedUser, role: 'creator' }

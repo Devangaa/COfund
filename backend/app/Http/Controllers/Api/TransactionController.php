@@ -3,28 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexTransactionRequest;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(IndexTransactionRequest $request): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
-
-        $request->validate([
-            'type' => ['nullable', 'string', 'in:payment,refund,disbursement,platform_fee,deposit,withdrawal'],
-            'status' => ['nullable', 'string', 'in:pending,success,failed'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
-            'user_id' => $user->role === 'admin' ? ['nullable', 'integer', 'exists:users,id'] : ['prohibited'],
-            'sort' => ['nullable', 'string', 'in:latest,oldest'],
-            'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
-        ]);
 
         $query = Transaction::query();
 

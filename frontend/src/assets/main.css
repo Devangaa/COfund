@@ -3,38 +3,44 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    @apply text-slate-800 bg-slate-50 antialiased font-sans;
+    @apply text-slate-800 bg-slate-50 antialiased font-sans selection:bg-blue-600 selection:text-white;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-900 tracking-tight;
   }
 }
 
 /* Custom modern scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-/* Glassmorphism utility */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Glassmorphism utilities */
+.glass-header {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .glass-dark {
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(11, 19, 43, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* Shimmer animation for skeletons */
@@ -53,7 +59,7 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Suppress any watermark / license badge */
+/* Suppress PrimeVue license badge */
 [class*="p-license"],
 [class*="primevue-license"],
 [class*="primeui-license"] {
@@ -64,7 +70,7 @@
 }
 
 /* ==========================================================================
-   Custom Vue Toastification Design (Desktop & Mobile Optimized)
+   Custom Vue Toastification Design
    ========================================================================== */
 
 .Vue-Toastification__container {
@@ -73,16 +79,16 @@
 
 .Vue-Toastification__toast {
   font-family: inherit !important;
-  border-radius: 1rem !important; /* 16px */
+  border-radius: 1rem !important;
   padding: 14px 18px !important;
-  font-size: 0.8125rem !important; /* 13px */
+  font-size: 0.8125rem !important;
   font-weight: 600 !important;
   line-height: 1.45 !important;
   letter-spacing: -0.01em !important;
-  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.15) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  min-height: 52px !important;
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  min-height: 50px !important;
 }
 
 .Vue-Toastification__toast--success {
@@ -113,51 +119,4 @@
   font-family: inherit !important;
   font-size: 0.8125rem !important;
   font-weight: 600 !important;
-  line-height: 1.45 !important;
 }
-
-.Vue-Toastification__close-button {
-  color: rgba(255, 255, 255, 0.8) !important;
-  opacity: 0.8 !important;
-  transition: all 0.2s ease !important;
-  font-size: 18px !important;
-  padding-left: 10px !important;
-}
-
-.Vue-Toastification__close-button:hover {
-  color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-.Vue-Toastification__progress-bar {
-  background: rgba(255, 255, 255, 0.4) !important;
-  height: 3px !important;
-  border-radius: 9999px !important;
-}
-
-/* Mobile Toast Layout Adjustment */
-@media (max-width: 640px) {
-  .Vue-Toastification__container {
-    top: 1rem !important;
-    left: 1rem !important;
-    right: 1rem !important;
-    width: auto !important;
-    max-width: calc(100vw - 2rem) !important;
-    transform: none !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-  }
-
-  .Vue-Toastification__toast {
-    width: 100% !important;
-    border-radius: 14px !important;
-    margin-bottom: 0.5rem !important;
-    padding: 12px 14px !important;
-    font-size: 0.75rem !important; /* 12px */
-  }
-
-  .Vue-Toastification__toast-body {
-    font-size: 0.75rem !important;
-  }
-}
-

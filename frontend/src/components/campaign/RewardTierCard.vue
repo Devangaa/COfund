@@ -28,19 +28,19 @@ const isSoldOut = computed(() => {
 <template>
   <div
     :class="[
-      'rounded-2xl p-6 border transition-all duration-200 flex flex-col justify-between relative overflow-hidden',
+      'rounded-2xl p-6 border transition-all duration-300 flex flex-col justify-between relative overflow-hidden',
       isSelected
-        ? 'border-blue-600 bg-blue-50/30 ring-2 ring-blue-500/20 shadow-md'
-        : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm',
+        ? 'border-blue-600 bg-blue-50/40 ring-2 ring-blue-500/30 shadow-soft -translate-y-0.5'
+        : 'border-slate-200/90 bg-white hover:border-blue-400 hover:shadow-elevated hover:-translate-y-1',
       isSoldOut ? 'opacity-60 bg-slate-50 border-slate-200' : '',
     ]"
   >
     <!-- Sold out banner badge -->
     <div
       v-if="isSoldOut"
-      class="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-bold uppercase tracking-wider"
+      class="absolute top-3 right-3 px-2.5 py-0.5 rounded-lg bg-rose-100 text-rose-700 text-[10px] font-extrabold uppercase tracking-wider"
     >
-      Habis Terjual
+      Slot Habis
     </div>
 
     <div>
@@ -51,10 +51,10 @@ const isSoldOut = computed(() => {
       </div>
 
       <div class="mb-4">
-        <span class="text-xl font-extrabold text-blue-600">
+        <span class="text-xl font-black text-blue-600">
           {{ formatCurrency(tier.min_amount) }}
         </span>
-        <span class="text-xs text-slate-400 font-medium ml-1">atau lebih</span>
+        <span class="text-xs text-slate-400 font-medium ml-1.5">atau lebih</span>
       </div>
 
       <p class="text-xs text-slate-600 leading-relaxed mb-6">
@@ -66,28 +66,29 @@ const isSoldOut = computed(() => {
       <!-- Quota info -->
       <div class="flex items-center justify-between text-xs text-slate-500">
         <span>Ketersediaan:</span>
-        <span v-if="tier.quota === 0" class="font-semibold text-emerald-600">
-          Tidak Terbatas
+        <span v-if="tier.quota === 0" class="font-bold text-emerald-600">
+          Tanpa Batas
         </span>
         <span v-else-if="tier.remaining_quota > 0" class="font-semibold text-slate-700">
           Sisa {{ tier.remaining_quota }} dari {{ tier.quota }} slot
         </span>
-        <span v-else class="font-semibold text-rose-600">
-          Kuota Habis (0 slot)
+        <span v-else class="font-bold text-rose-600">
+          Kuota Habis
         </span>
       </div>
 
       <!-- Action Button -->
       <button
+        type="button"
         @click="emit('select', tier)"
         :disabled="isSoldOut || !isCampaignActive"
         :class="[
-          'w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm',
+          'w-full py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 active:scale-[0.98]',
           isSelected
-            ? 'bg-blue-600 text-white hover:bg-blue-700'
+            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
             : isSoldOut || !isCampaignActive
             ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-            : 'bg-slate-900 text-white hover:bg-blue-600',
+            : 'bg-slate-900 text-white hover:bg-blue-600 shadow-sm',
         ]"
       >
         <i v-if="isSelected" class="pi pi-check text-xs"></i>

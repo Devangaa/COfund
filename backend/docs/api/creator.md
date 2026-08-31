@@ -1,8 +1,8 @@
-# CoFund API - Modul Creator (Creator Module)
+# CoFund API - Modul Dasbor Inisiator (Creator Module)
 
 ## 1. Judul & Deskripsi Modul
 
-Modul ini menyediakan endpoint statistik eksklusif untuk kreator. Statistik mencakup total kampanye, total dukungan, total dana terkumpul, target, biaya platform, tingkat penyelesaian, distribusi status kampanye, dan data grafik berdasarkan periode waktu.
+Modul Inisiator (*Creator Module*) menyediakan antarmuka analitik performa proyek yang dikelola oleh pembuat kampanye, meliputi total dana terhimpun, rasio proyek sukses, proyeksi dana bersih setelah potongan fee platform (5%), serta query daftar kampanye milik pribadi (`scope=mine`).
 
 **Base Path:** `/api/v1`
 
@@ -12,60 +12,52 @@ Modul ini menyediakan endpoint statistik eksklusif untuk kreator. Statistik menc
 
 ### Komponen Terkait
 
-| Komponen | Lokasi | Deskripsi |
+| Komponen | Lokasi File | Deskripsi |
 |---|---|---|
-| **Controller** | `app/Http/Controllers/Api/Creator/CreatorStatisticsController.php` | Endpoint statistik creator |
-| **Model** | `app/Models/Campaign.php`, `app/Models/Backing.php` | Model yang digunakan untuk query statistik |
-| **Enums** | `app/Enums/CampaignStatus.php` | Status kampanye untuk distribusi |
-| **Middleware** | `auth:sanctum`, `role:creator`, `verified` | Hanya kreator yang terautentikasi |
-| **Config** | `config/cofund.php` | `platform_fee` rate (default: 0.05 = 5%) |
+| **Controller** | `backend/app/Http/Controllers/Api/Creator/CreatorStatisticsController.php` | Endpoint metrik analitik kreator |
+| | `backend/app/Http/Controllers/Api/CampaignController.php` | Query kampanye milik sendiri (`scope=mine`) |
+| **Service Layer** | `backend/app/Services/StatisticsService.php` | Kalkulasi agregasi performa kampanye inisiator |
+| **Form Requests** | `backend/app/Http/Requests/IndexStatisticsRequest.php` | Validasi rentang tanggal statistik |
+| | `backend/app/Http/Requests/IndexCampaignRequest.php` | Validasi query parameter filter kampanye |
+| **Middleware** | `auth:sanctum`, `role:creator`, `verified` | Proteksi otentikasi dan hak akses kreator |
 
-### Alur Proses Logika Bisnis
+### Diagram Alur Agregasi Metrik Kreator
 
 ```
-Creator meminta statistik
-        |
-        v
-CreatorStatisticsController::index()
-        |
-        v
-Validate query params
-  - period: daily|weekly|monthly|yearly (default: daily)
-  - start_date, end_date (optional)
-        |
-        v
-Query campaigns milik creator
-  (filter by date jika start_date/end_date)
-        |
-        +---> Total campaigns
-        +---> Total collected (SUM collected_amount)
-        +---> Total target (SUM target_amount)
-        +---> Total fees (backings SUM amount * platform_fee)
-        +---> Completion rate
-        +---> Status distribution (normalize)
-        +---> Chart data (group by period)
-        |
-        v
-Return JSON response
+Creator Request Dashboard Stats
+        │
+        ▼
+[ CreatorStatisticsController::index ]
+        │
+        ▼
+[ StatisticsService::getCreatorStats(user) ]
+        │
+        ├─► Hitung Total Kampanye Dibuat
+        ├─► Hitung Kampanye Active, Success, Failed
+        ├─► Jumlahkan Total Dana Terkumpul
+        ├─► Hitung Estimasi Dana Bersih (95%)
+        │
+        ▼
+Return Standard JSON Response (HTTP 200)
 ```
 
 ---
 
-## 3. Struktur File
+## 3. Struktur File Terkait
 
 ```
 backend/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/
-│   │   │   └── Api/
-│   │   │       └── Creator/
-│   │   │           └── CreatorStatisticsController.php
-│   └── Models/
-│       ├── Campaign.php
-│       └── Backing.php
-├── config/
-│   └── cofund.php (platform_fee config)
+│   │   ├── Controllers/Api/
+│   │   │   ├── CampaignController.php
+│   │   │   └── Creator/
+│   │   │       └── CreatorStatisticsController.php
+│   │   └── Requests/
+│   │       ├── IndexCampaignRequest.php
+│   │       └── IndexStatisticsRequest.php
+│   └── Services/
+│       └── StatisticsService.php
 └── routes/
     └── api.php
 ```
@@ -74,227 +66,131 @@ backend/
 
 ## 4. API Endpoints
 
-### 4.1 Endpoint: Index Creator Statistics
-
-- **Deskripsi:** Mendapatkan statistik lengkap kampanye dan keuangan untuk kreator yang sedang login.
-- **HTTP Method & URL Path:** `GET /api/v1/creator/statistics`
+### 4.1 Endpoint: Statistik Analitik Kreator (`GET /api/v1/creator/statistics`)
 - **Middleware:** `auth:sanctum`, `role:creator`, `verified`
 
-#### Tabel Parameter (Query)
+#### Parameter Query
+| Parameter | Tipe | Wajib | Deskripsi |
+|---|---|---|---|
+| `start_date` | date | Tidak | Filter tanggal mulai (YYYY-MM-DD) |
+| `end_date` | date | Tidak | Filter tanggal akhir (YYYY-MM-DD) |
 
-| Nama | Tipe | Wajib | Aturan Validasi | Deskripsi |
-|---|---|---|---|---|
-| `period` | string | Tidak | `in:daily,weekly,monthly,yearly` | Periode pengelompokan data grafik (default: `daily`) |
-| `start_date` | date | Tidak | - | Tanggal mulai filter |
-| `end_date` | date | Tidak | - | Tanggal akhir filter |
-
-#### Contoh Request
-
-```
-GET /api/v1/creator/statistics?period=monthly&start_date=2024-01-01&end_date=2024-03-31
-Authorization: Bearer {token}
-```
-
-#### Contoh Response (HTTP 200)
-
+#### Contoh Response (`200 OK`):
 ```json
 {
-    "success": true,
-    "data": {
-        "total_campaigns": 5,
-        "total_backings": 127,
-        "total_collected": 25000000,
-        "total_target": 50000000,
-        "total_fees": 2500000,
+  "success": true,
+  "data": {
+    "total_campaigns": 3,
+    "active_campaigns": 1,
+    "successful_campaigns": 2,
+    "failed_campaigns": 0,
+    "total_funds_raised": 75000000,
+    "total_backers": 85,
     "platform_fee_rate": 0.05,
-        "completion_rate": 50.0,
-        "status_distribution": {
-            "draft": 1,
-            "review": 0,
-            "active": 2,
-            "success": 2,
-            "failed": 0
-        },
-        "chart": [
-            {
-                "period": "2024-01",
-                "campaigns": 2,
-                "collected": 15000000
-            },
-            {
-                "period": "2024-02",
-                "campaigns": 3,
-                "collected": 10000000
-            }
-        ]
-    }
+    "estimated_net_funds": 71250000
+  }
 }
 ```
 
-#### Deskripsi Field
+---
 
-| Kolom | Tipe | Deskripsi |
-|---|---|---|
-| `total_campaigns` | integer | Jumlah total kampanye yang dibuat kreator |
-| `total_backings` | integer | Jumlah total dukungan untuk semua kampanye kreator |
-| `total_collected` | decimal | Total dana terkumpul dari semua kampanye |
-| `total_target` | decimal | Total target dana dari semua kampanye |
-| `total_fees` | decimal | Total biaya platform (5% dari backing amount) |
-| `platform_fee_rate` | decimal | Persentase biaya platform (default 0.05 = 5%) |
-| `completion_rate` | decimal | Persentase pencapaian target |
-| `status_distribution` | object | Distribusi kampanye berdasarkan status |
-| `chart.period` | string | Label periode (tanggal/bulan/tahun) |
-| `chart.campaigns` | integer | Jumlah kampanye pada periode |
-| `chart.collected` | decimal | Dana terkumpol pada periode |
+### 4.2 Endpoint: Kampanye Saya (`GET /api/v1/campaigns?scope=mine`)
+- **Middleware:** `auth:sanctum`, `role:creator`, `verified`
 
-#### Side Effects
-
-- Read-only query, tidak ada perubahan data
-- Query ke tabel `campaigns` dan `backings`
-
-#### Error Handling
-
-| Kode HTTP | Pesam Error JSON | Kondisi Pemicu |
-|---|---|---|
-| 401 | `{"success":false,"message":"Unauthenticated."}` | Token tidak valid |
-| 403 | `{"success":false,"message":"Unauthorized. This action requires Creator role."}` | Bukan role creator |
-| 422 | `{"success":false,"message":"The given data was invalid.","errors":{...}}` | Parameter query tidak valid |
+#### Contoh Response (`200 OK`):
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 10,
+      "title": "Perangkat IoT Pendeteksi Udara",
+      "slug": "perangkat-iot-pendeteksi-udara",
+      "status": "active",
+      "target_amount": 50000000,
+      "collected_amount": 32500000,
+      "progress_percentage": 65,
+      "deadline": "2026-10-31"
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "current_page": 1,
+      "last_page": 1,
+      "per_page": 10,
+      "total": 1
+    }
+  }
+}
+```
 
 ---
 
 ## 5. Skema Sumber Daya (Resource Schema)
 
-### Creator Statistics Response Schema
-
+### CreatorStatistics Schema
 ```json
 {
-    "total_campaigns": 5,
-    "total_backings": 127,
-    "total_collected": 25000000.00,
-    "total_target": 50000000.00,
-    "total_fees": 2500000.00,
-     "platform_fee_rate": 0.05,
-    "completion_rate": 50.0,
-    "status_distribution": {
-        "draft": 1,
-        "review": 0,
-        "active": 2,
-        "success": 2,
-        "failed": 0
-    },
-    "chart": [
-        {
-            "period": "2024-01",
-            "campaigns": 2,
-            "collected": 15000000.00
-        }
-    ]
+  "total_campaigns": 3,
+  "active_campaigns": 1,
+  "successful_campaigns": 2,
+  "failed_campaigns": 0,
+  "total_funds_raised": 75000000,
+  "total_backers": 85,
+  "platform_fee_rate": 0.05,
+  "estimated_net_funds": 71250000
 }
 ```
-
-| Kolom | Tipe | Deskripsi |
-|---|---|---|
-| `total_campaigns` | integer | Jumlah kampanye creator |
-| `total_backings` | integer | Jumlah backing keseluruhan |
-| `total_collected` | decimal(15,2) | Total dana terkumpul |
-| `total_target` | decimal(15,2) | Total target dana |
-| `total_fees` | decimal(15,2) | Biaya platform (5%) |
-| `platform_fee_rate` | decimal | Rate fee (0.05) |
-| `completion_rate` | decimal(5,2) | Persentase pencapaian (%) |
-| `status_distribution` | object | Count per status kampanye |
-| `chart[]` | array | Data grafik berdasarkan periode |
 
 ---
 
 ## 6. Pengujian Postman
 
-### Creator Statistics (Default)
-
-1. Method: `GET`
-2. URL: `{{base_url}}/api/v1/creator/statistics`
-3. Headers: `Authorization: Bearer {{auth_token}}`
-
-**Tests Script:**
-
 ```javascript
 pm.test("Status code is 200", function () {
     pm.response.to.have.status(200);
 });
-pm.test("Has required fields", function () {
-    var jsonData = pm.response.json();
-    pm.expect(jsonData.data.total_campaigns).to.be.a("number");
-    pm.expect(jsonData.data.total_collected).to.be.a("number");
-    pm.expect(jsonData.data.status_distribution).to.be.an("object");
-    pm.expect(jsonData.data.chart).to.be.an("array");
-});
-```
-
-### Creator Statistics (Monthly)
-
-1. Method: `GET`
-2. URL: `{{base_url}}/api/v1/creator/statistics?period=monthly&start_date=2024-01-01&end_date=2024-12-31`
-3. Headers: `Authorization: Bearer {{auth_token}}`
-
-**Tests Script:**
-
-```javascript
-pm.test("Status code is 200", function () {
-    pm.response.to.have.status(200);
-});
-pm.test("Chart data grouped by month", function () {
-    var jsonData = pm.response.json();
-    jsonData.data.chart.forEach(item => {
-        pm.expect(item.period).to.match(/^\d{4}-\d{2}$/);
-    });
+pm.test("Has valid creator statistics metrics", function () {
+    var data = pm.response.json().data;
+    pm.expect(data.total_campaigns).to.be.a("number");
+    pm.expect(data.platform_fee_rate).to.eql(0.05);
 });
 ```
 
 ---
 
-## 7. Kasus Pengujian
+## 7. Kasus Pengujian Ringkas
 
-| No | Skenario | Input | Keluaran yang Diperkirakan |
+| No | Skenario | Input | Output yang Diharapkan |
 |---|---|---|---|
-| 1 | Get default statistics | GET /creator/statistics | Data statistik default (daily) |
-| 2 | Get monthly statistics | `?period=monthly` | chart data dalam format `YYYY-MM` |
-| 3 | Get yearly statistics | `?period=yearly` | chart data dalam format `YYYY` |
-| 4 | Filter by date range | `?start_date=2024-01-01&end_date=2024-06-30` | Data hanya dari rentang tanggal |
-| 5 | Backer mengakses creator statistik | Login sebagai backer, GET /creator/statistics | HTTP 403, "Creator role required" |
-| 6 | Unauthenticated access | Tanpa token | HTTP 401, "Unauthenticated" |
-| 7 | Creator tanpa kampanye | Login sebagai creator baru | total_campaigns=0, chart kosong |
+| 1 | Creator baru akses statistik | Token creator tanpa kampanye | `200 OK` + Seluruh nilai bernilai 0 |
+| 2 | Backer akses statistik creator | Token backer | `403 Forbidden` |
+| 3 | Akses tanpa login | No token | `401 Unauthorized` |
 
 ---
 
-## 8. Pemecahan Masalah
+## 8. Pemecahan Masalah (Troubleshooting)
 
-| Masalah | Solusi / Workaround |
-|---|---|
-| `platform_fee_rate` — konsisten | Biaya platform telah diselaraskan ke 5% (`0.05`) melalui `config/cofund.php` (`PLATFORM_FEE_RATE=0.05`). `CreatorStatisticsController`, `AdminStatisticsController`, dan `DisburseCampaignJob` semua kini menggunakan nilai yang sama. |
-| Chart data kosong | Pastikan kreator memiliki setidaknya 1 kampanye. Data grafik dihasilkan dari query kampanye. |
-| Status distribution tidak lengkap | Semua status enum (`draft`, `review`, `active`, `success`, `failed`) selalu disertakan dengan nilai 0 jika tidak ada. |
+| Gejala / Masalah | Penyebab | Solusi |
+|---|---|---|
+| `403 Creator role required` | Akun masih berstatus donatur (backer) | Lakukan upgrade role via `POST /api/v1/upgrade-to-creator`. |
+| Nilai dana bersih tidak sesuai | Potongan fee belum dihitung | Sistem otomatis mengenakan `platform_fee_rate = 0.05` (5%). |
 
 ---
 
 ## 9. Matriks RBAC
 
-| Endpoint | Public | Backer | Creator | Admin |
+| Endpoint | Guest | Backer | Creator | Admin |
 |---|---|---|---|---|
-| `GET /api/v1/creator/statistics` | - | - | ✓ | - |
+| `GET /creator/statistics` | ✗ | ✗ | ✓ | ✗ |
+| `GET /campaigns?scope=mine` | ✗ | ✗ | ✓ | ✗ |
 
 ---
 
-## 10. Matriks Kasus Pengujian (Test Case)
+## 10. Matriks Kasus Pengujian Detail (Test Cases)
 
-| Test ID | Skenario Pengujian | Kategori | Input / Kondisi | Expected HTTP Code | Expected Respon / Side Effect |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `TC-CREATOR-001` | Get statistik default (daily) | Positive | `GET /creator/statistics` | `200 OK` | Statistik lengkap, chart daily |
-| `TC-CREATOR-002` | Get statistik monthly | Positive | `?period=monthly` | `200 OK` | Chart dalam format YYYY-MM |
-| `TC-CREATOR-003` | Get statistik yearly | Positive | `?period=yearly` | `200 OK` | Chart dalam format YYYY |
-| `TC-CREATOR-004` | Get statistik dengan date filter | Positive | `?start_date=2024-01-01&end_date=2024-06-30` | `200 OK` | Data dalam rentang tanggal |
-| `TC-CREATOR-005` | Get statistik tanpa token | Security | No auth | `401 Unauthorized` | Error "Unauthenticated" |
-| `TC-CREATOR-006` | Get statistik sebagai backer | Security | Role backer | `403 Forbidden` | Error "Creator role required" |
-| `TC-CREATOR-007` | Get statistik sebagai admin | Positive | Login admin | `200 OK` | Admin bisa akses (role check melewati) |
-| `TC-CREATOR-008` | Get statistik dengan period invalid | Negative | `?period=invalid` | `422 Unprocessable` | Error "Invalid period value" |
-| `TC-CREATOR-009` | Get statistik dengan date range tidak valid | Negative | `start_date > end_date` | `422 Unprocessable` | Error validasi tanggal |
-| `TC-CREATOR-010` | Creator tanpa kampanye | Positive | Creator baru, belum punya kampanye | `200 OK` | `total_campaigns=0`, chart kosong |
-| `TC-CREATOR-011` | Email belum terverifikasi | Security | Creator email belum verified | `403 Forbidden` | Error "Email verification required" |
+| Test ID | Skenario | Kategori | Input | Expected HTTP | Expected Response |
+|---|---|---|---|---|---|
+| `TC-CRE-001` | Get statistik creator valid | Positive | Token creator terverifikasi | `200 OK` | Metrik analitik lengkap |
+| `TC-CRE-002` | Get statistik tanpa email verify | Security | Email belum verified | `403 Forbidden` | Error "Email verification required." |
+| `TC-CRE-003` | Get statistik via token backer | Security | Role backer | `403 Forbidden` | Error "Creator role required." |

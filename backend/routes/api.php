@@ -26,6 +26,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get("/campaigns", [CampaignController::class, "index"])->name("campaign.index");
     Route::get("/campaigns/{campaign:slug}", [CampaignController::class, "show"])->name("campaign.show");
 
+    // Authenticated User Routes (Wallet, Profile, Transactions, Stats)
     Route::middleware("auth:sanctum")->group(function () {
         Route::post("/logout", [AuthController::class, "logout"])->name("logout");
         Route::get("/me", [AuthController::class, "me"])->name("me");
@@ -43,8 +44,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 "message" => "Verification email sent",
             ]);
         })->name("verification.resend");
+
+        // Wallet & Transactions (Accessible without requiring email verification)
+        Route::post("/wallet/deposit", [WalletController::class, "deposit"])->name("wallet.deposit");
+        Route::post("/wallet/withdraw", [WalletController::class, "withdraw"])->name("wallet.withdraw");
+        Route::get("/transactions", [TransactionController::class, "index"])->name("transactions.index");
+        Route::get("/backings", [BackingController::class, "index"])->name("backings.index");
+        Route::get("/backer/statistics", [BackerStatisticsController::class, "index"])->name("backer.statistics");
     });
 
+    // Creator Routes (Requires Creator Role + Verified Email)
     Route::middleware(['auth:sanctum', 'role:creator', 'verified'])->group(function () {
         Route::post("/campaigns", [CampaignController::class, "store"])->name("campaign.store");
         Route::put("/campaigns/{campaign:slug}", [CampaignController::class, "update"])->name("campaign.update");
@@ -68,21 +77,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     Route::get("/campaigns/{campaign:slug}/updates", [CampaignUpdateController::class, "index"])->name("campaign-update.index");
 
+    // Verified User Action Routes (Backing a Campaign)
     Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::post("/campaigns/{campaign:slug}/back", [BackingController::class, "store"])->name("backings.store");
-        Route::get("/backings", [BackingController::class, "index"])->name("backings.index");
         Route::get("/campaigns/{campaign:slug}/backings", [BackingController::class, "indexByCampaign"])->name("campaign.backings.index");
-
-        Route::get("/transactions", [TransactionController::class, "index"])->name("transactions.index");
-
-        // Wallet
-        Route::post("/wallet/deposit", [WalletController::class, "deposit"])->name("wallet.deposit");
-        Route::post("/wallet/withdraw", [WalletController::class, "withdraw"])->name("wallet.withdraw");
-
-        // Backer Statistics
-        Route::get("/backer/statistics", [BackerStatisticsController::class, "index"])->name("backer.statistics");
     });
 
+    // Admin Routes
     Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::put("/admin/campaigns/{campaign:slug}/approve", [CampaignController::class, "approve"])->name("campaign.approve");
         Route::put("/admin/campaigns/{campaign:slug}/reject", [CampaignController::class, "reject"])->name("campaign.reject");

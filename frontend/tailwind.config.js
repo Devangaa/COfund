@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
         brand: {
@@ -27,12 +27,20 @@ export default {
           800: '#111C33',
           900: '#0B132B',
           950: '#060B18',
+        },
+        cta: {
+          400: '#FBBF24',
+          500: '#F59E0B',
+          600: '#D97706',
+          700: '#B45309',
         }
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-        'card': '0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04)',
-        'elevated': '0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)',
+        'soft': '0 2px 10px -2px rgba(15, 23, 42, 0.05), 0 1px 3px 0 rgba(15, 23, 42, 0.03)',
+        'card': '0 0 0 1px rgba(15, 23, 42, 0.05), 0 2px 8px -1px rgba(15, 23, 42, 0.04)',
+        'elevated': '0 12px 24px -6px rgba(15, 23, 42, 0.07), 0 4px 8px -4px rgba(15, 23, 42, 0.03)',
+        'glow-blue': '0 0 25px -5px rgba(37, 99, 235, 0.25)',
+        'glow-amber': '0 0 25px -5px rgba(245, 158, 11, 0.35)',
       }
     },
   },

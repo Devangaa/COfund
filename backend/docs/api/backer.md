@@ -1,8 +1,8 @@
-# CoFund API - Modul Backer (Backer Module)
+# CoFund API - Modul Donatur (Backer Module)
 
 ## 1. Judul & Deskripsi Modul
 
-Modul ini menyediakan endpoint statistik untuk pengguna dengan peran **backer** (donatur). Statistik mencakup total dana yang didanai, total refund, jumlah backing, dan jumlah kampanye yang didukung.
+Modul Donatur (*Backer Module*) menyediakan endpoint analitik dan pengelolaan data aktivitas pendanaan untuk pengguna dengan peran donatur, mencakup total dana yang didonasikan, akumulasi dana yang dikembalikan (*refunded*), jumlah proyek yang didanai, dan daftar seluruh riwayat dukungan.
 
 **Base Path:** `/api/v1`
 
@@ -12,53 +12,56 @@ Modul ini menyediakan endpoint statistik untuk pengguna dengan peran **backer** 
 
 ### Komponen Terkait
 
-| Komponen | Lokasi | Deskripsi |
+| Komponen | Lokasi File | Deskripsi |
 |---|---|---|
-| **Controller** | `app/Http/Controllers/Api/Backer/BackerStatisticsController.php` | Endpoint statistik backer |
-| **Model** | `app/Models/Backing.php` | Model backing dengan relasi campaign |
-| **Enums** | `app/Enums/BackingStatus.php` | `pending`, `completed`, `refunded` |
-| **Middleware** | `auth:sanctum`, `verified` | Otentikasi dan verifikasi email |
+| **Controller** | `backend/app/Http/Controllers/Api/Backer/BackerStatisticsController.php` | Endpoint metrik analitik donatur |
+| | `backend/app/Http/Controllers/Api/BackingController.php` | Pengambilan daftar donasi pengguna |
+| **Service Layer** | `backend/app/Services/StatisticsService.php` | Agregasi data kontribusi donatur |
+| **Resource** | `backend/app/Http/Resources/BackingResource.php` | Format output data donasi |
+| **Model** | `backend/app/Models/Backing.php` | Model relasi donasi dan kampanye |
+| **Enums** | `backend/app/Enums/BackingStatus.php` | `pending`, `completed`, `refunded` |
+| **Middleware** | `auth:sanctum` | Otentikasi sesi pengguna |
 
-### Alur Proses Logika Bisnis
+### Diagram Alur Agregasi Metrik Donatur
 
 ```
-Backer login
-        |
-        v
-BackerStatisticsController::index()
-        |
-        v
-Get user from request
-        |
-        v
-Load backings with campaign
-        |
-        +---> total_backed (sum of COMPLETED backings)
-        +---> total_refunded (sum of REFUNDED backings)
-        +---> total_backings (count)
-        +---> total_campaigns_backed (distinct campaign_id)
-        |
-        v
-Return JSON response
+Backer Membuka Dasbor
+        │
+        ▼
+[ BackerStatisticsController::index ]
+        │
+        ▼
+[ StatisticsService::getBackerStats(user) ]
+        │
+        ├─► Hitung Total Dana Berstatus COMPLETED
+        ├─► Hitung Total Dana Berstatus REFUNDED
+        ├─► Hitung Jumlah Transaksi Backing
+        ├─► Hitung Jumlah Kampanye Unik yang Didukung
+        │
+        ▼
+Return Standard JSON Response (HTTP 200)
 ```
 
 ---
 
-## 3. Struktur File
+## 3. Struktur File Terkait
 
 ```
 backend/
 ├── app/
+│   ├── Enums/
+│   │   └── BackingStatus.php
 │   ├── Http/
-│   │   ├── Controllers/
-│   │   │   └── Api/
-│   │   │       └── Backer/
-│   │   │           └── BackerStatisticsController.php
-│   └── Models/
-│       ├── Backing.php
-│       ├── User.php
-│       └── Enums/
-│           └── BackingStatus.php
+│   │   ├── Controllers/Api/
+│   │   │   ├── Backer/
+│   │   │   │   └── BackerStatisticsController.php
+│   │   │   └── BackingController.php
+│   │   └── Resources/
+│   │       └── BackingResource.php
+│   ├── Models/
+│   │   └── Backing.php
+│   └── Services/
+│       └── StatisticsService.php
 └── routes/
     └── api.php
 ```
@@ -67,144 +70,122 @@ backend/
 
 ## 4. API Endpoints
 
-### 4.1 Endpoint: Index Backer Statistics
+### 4.1 Endpoint: Statistik Donatur (`GET /api/v1/backer/statistics`)
+- **Middleware:** `auth:sanctum`
 
-- **Deskripsi:** Mendapatkan statistik dukungan (backing) untuk backer yang sedang login.
-- **HTTP Method & URL Path:** `GET /api/v1/backer/statistics`
-- **Middleware:** `auth:sanctum`, `verified`
-
-#### Contoh Request
-
-```
-GET /api/v1/backer/statistics
-Authorization: Bearer {token}
-```
-
-#### Contoh Response (HTTP 200)
-
+#### Contoh Response (`200 OK`):
 ```json
 {
-    "success": true,
-    "data": {
-        "total_backed": 2500000,
-        "total_refunded": 500000,
-        "total_backings": 15,
-        "total_campaigns_backed": 8
-    }
+  "success": true,
+  "data": {
+    "total_backed": 2500000,
+    "total_refunded": 500000,
+    "total_backings": 15,
+    "total_campaigns_backed": 8
+  }
 }
 ```
 
-#### Deskripsi Field
+---
 
-| Kolom | Tipe | Deskripsi |
-|---|---|---|
-| `total_backed` | decimal | Total dana yang didanai (backing status `completed`) |
-| `total_refunded` | decimal | Total dana yang dikembalikan (backing status `refunded`) |
-| `total_backings` | integer | Jumlah total backing |
-| `total_campaigns_backed` | integer | Jumlah kampanye unik yang didukung |
+### 4.2 Endpoint: Daftar Riwayat Backing (`GET /api/v1/backings`)
+- **Middleware:** `auth:sanctum`
 
-#### Side Effects
-
-- Read-only query
-- Menjumlahkan backing dengan status `completed` dan `refunded`
-- Menghitung kampanye unik yang didukung melalui distinct `campaign_id`
-
-#### Error Handling
-
-| Kode HTTP | Pesam Error JSON | Kondisi Pemicu |
-|---|---|---|
-| 401 | `{"success":false,"message":"Unauthenticated."}` | Token tidak valid |
-| 403 | `{"success":false,"message":"The user must verify their email."}` | Email belum diverifikasi |
+#### Contoh Response (`200 OK`):
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "campaign": {
+        "id": 5,
+        "slug": "sensor-udara-pintar",
+        "title": "Sensor Udara Pintar",
+        "status": "active"
+      },
+      "tier": {
+        "id": 1,
+        "name": "Early Bird",
+        "min_amount": 50000
+      },
+      "amount": 50000,
+      "status": "completed",
+      "created_at": "2026-08-31T10:30:00Z"
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "current_page": 1,
+      "last_page": 1,
+      "per_page": 10,
+      "total": 1
+    }
+  }
+}
+```
 
 ---
 
 ## 5. Skema Sumber Daya (Resource Schema)
 
-### Backer Statistics Response Schema
-
+### BackerStatistics Schema
 ```json
 {
-    "total_backed": 2500000.00,
-    "total_refunded": 500000.00,
-    "total_backings": 15,
-    "total_campaigns_backed": 8
+  "total_backed": 2500000,
+  "total_refunded": 500000,
+  "total_backings": 15,
+  "total_campaigns_backed": 8
 }
 ```
-
-| Kolom | Tipe | Deskripsi |
-|---|---|---|
-| `total_backed` | decimal(15,2) | Total dana didanai (completed) |
-| `total_refunded` | decimal(15,2) | Total dana dikembalikan (refunded) |
-| `total_backings` | integer | Jumlah backing |
-| `total_campaigns_backed` | integer | kampanye unik yang didukung |
 
 ---
 
 ## 6. Pengujian Postman
-
-### Backer Statistics
-
-1. Method: `GET`
-2. URL: `{{base_url}}/api/v1/backer/statistics`
-3. Headers: `Authorization: Bearer {{auth_token}}`
-
-**Tests Script:**
 
 ```javascript
 pm.test("Status code is 200", function () {
     pm.response.to.have.status(200);
 });
 pm.test("Required fields exist", function () {
-    var jsonData = pm.response.json();
-    pm.expect(jsonData.data.total_backed).to.be.a("number");
-    pm.expect(jsonData.data.total_backings).to.be.a("number");
-    pm.expect(jsonData.data.total_campaigns_backed).to.be.a("number");
+    var data = pm.response.json().data;
+    pm.expect(data.total_backed).to.be.a("number");
+    pm.expect(data.total_backings).to.be.a("number");
 });
 ```
 
 ---
 
-## 7. Kasus Pengujian
+## 7. Kasus Pengujian Ringkas
 
-| No | Skenario | Input | Keluaran yang Diperkirakan |
+| No | Skenario | Input | Output yang Diharapkan |
 |---|---|---|---|
-| 1 | Get backer statistics | GET /backer/statistics | Statistik backing backer |
-| 2 | Backer tanpa backing | Login backer baru | Semua nilai 0 |
-| 3 | Backer setelah backing | Setelah membuat backing | total_backings bertambah |
-| 4 | Backer setelah refund | Setelah kampanye gagal | total_refunded bertambah |
-| 5 | Unauthenticated | Tanpa token | HTTP 401, "Unauthenticated" |
-| 6 | Creator mengakses | Login sebagai creator | HTTP 200 (endpoint tidak menge-check role) |
+| 1 | Donatur baru ambil statistik | Token user baru | `200 OK` + Nilai metrik 0 |
+| 2 | Donatur setelah melakukan backing | Token backer aktif | `200 OK` + `total_backed` terakumulasi |
+| 3 | Akses tanpa token auth | No token | `401 Unauthorized` |
 
 ---
 
-## 8. Pemecahan Masalah
+## 8. Pemecahan Masalah (Troubleshooting)
 
-| Masalah | Solusi / Workaround |
-|---|---|
-| Total nilainya 0 meskipun pernah backing | Pastikan backing memiliki status `completed`. Backing dengan status `pending` tidak dihitung. |
-| `total_campaigns_backed` tidak akurat | Nilai ini dihitung dengan `distinct('campaign_id')->count('campaign_id')` pada query backing. |
-| Creator bisa mengakses endpoint ini | Endpoint ini tidak mengecek role secara eksplisit. Jika ingin dibatasi untuk backer saja, tambahkan middleware `role:backer`. |
+| Gejala / Masalah | Penyebab | Solusi |
+|---|---|---|
+| Nilai `total_backed` tetap 0 setelah donasi | Transaksi donasi belum berstatus `completed` | Pastikan transaksi donasi telah sukses diproses. |
 
 ---
 
 ## 9. Matriks RBAC
 
-| Endpoint | Public | Backer | Creator | Admin |
+| Endpoint | Guest | Backer | Creator | Admin |
 |---|---|---|---|---|
-| `GET /api/v1/backer/statistics` | - | ✓ | ✓* | ✓* |
-
-> *Catatan:* Endpoint ini tidak mengecek role, hanya membutuhkan autentikasi dan verifikasi email. Semua peran terautentikasi dapat mengakses.
+| `GET /backer/statistics` | ✗ | ✓ | ✓ | ✓ |
+| `GET /backings` | ✗ | ✓ (Milik sendiri) | ✓ (Milik sendiri) | ✓ (Semua) |
 
 ---
 
-## 10. Matriks Kasus Pengujian (Test Case)
+## 10. Matriks Kasus Pengujian Detail (Test Cases)
 
-| Test ID | Skenario Pengujian | Kategori | Input / Kondisi | Expected HTTP Code | Expected Respon / Side Effect |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `TC-BACKER-001` | Get statistik backer | Positive | Auth user, email verified | `200 OK` | Statistik lengkap |
-| `TC-BACKER-002` | Get statistik tanpa token | Security | No auth | `401 Unauthorized` | Error "Unauthenticated" |
-| `TC-BACKER-003` | Get statistik dengan email belum verified | Security | Email belum verified | `403 Forbidden` | Error "Email verification required" |
-| `TC-BACKER-004` | Get statistik sebagai creator | Positive | Login sebagai creator | `200 OK` | Bisa akses (role tidak dibatas) |
-| `TC-BACKER-005` | Get statistik sebagai admin | Positive | Login admin | `200 OK` | Bisa akses (role tidak dibatas) |
-| `TC-BACKER-006` | Backer belum pernah backing | Positive | User baru, belum ada backing | `200 OK` | Semua nilai 0, empty |
-| `TC-BACKER-007` | Spam request statistik | Throttling | Rapid requests | `429 Too Many Requests` | Rate limited |
+| Test ID | Skenario | Kategori | Input | Expected HTTP | Expected Response |
+|---|---|---|---|---|---|
+| `TC-BAC-001` | Get statistik backer | Positive | Auth valid | `200 OK` | Metrik statistik donatur |
+| `TC-BAC-002` | Get statistik tanpa token | Security | No auth | `401 Unauthorized` | Error "Unauthenticated" |

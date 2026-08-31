@@ -37,9 +37,9 @@ const progress = computed(() => {
 
 <template>
   <div
-    class="group bg-white rounded-2xl border border-slate-100/90 shadow-sm hover:shadow-elevated transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1"
+    class="group bg-white rounded-2xl border border-slate-200/80 shadow-soft hover:shadow-elevated transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1"
   >
-    <!-- Card Image Header (1:1 Persegi Kotak) -->
+    <!-- Card Image Header (Aspect Ratio Square 1:1) -->
     <div class="relative aspect-square w-full overflow-hidden bg-slate-100">
       <img
         :src="primaryImageUrl"
@@ -48,12 +48,12 @@ const progress = computed(() => {
         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         loading="lazy"
       />
-      <!-- Gradient overlay -->
-      <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+      <!-- Gradient overlay for text contrast -->
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
 
       <!-- Category Pill -->
       <div class="absolute top-3 left-3">
-        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900/80 backdrop-blur-md text-sky-300 border border-slate-700/50 shadow-sm">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900/80 backdrop-blur-md text-sky-300 border border-slate-700/60 shadow-sm">
           {{ campaign.category?.name || 'Inovasi' }}
         </span>
       </div>
@@ -64,7 +64,7 @@ const progress = computed(() => {
       </div>
 
       <!-- Days remaining bottom overlay -->
-      <div class="absolute bottom-3 left-3 text-white text-xs font-semibold flex items-center gap-1.5">
+      <div class="absolute bottom-3 left-3 text-white text-xs font-semibold flex items-center gap-1.5 drop-shadow-sm">
         <i class="pi pi-calendar text-[11px] text-sky-400"></i>
         <span>{{ daysInfo.text }}</span>
       </div>
@@ -97,16 +97,16 @@ const progress = computed(() => {
       </div>
 
       <!-- Funding Metrics -->
-      <div class="space-y-3 pt-2 border-t border-slate-100">
+      <div class="space-y-3 pt-3 border-t border-slate-100">
         <!-- Progress Bar -->
         <ProgressBar :percentage="progress" height="h-2" />
 
         <div class="flex items-baseline justify-between">
           <div>
-            <div class="text-sm font-bold text-slate-900">
+            <div class="text-sm font-extrabold text-slate-900">
               {{ formatCurrency(campaign.collected_amount) }}
             </div>
-            <div class="text-[11px] text-slate-400">
+            <div class="text-[11px] text-slate-400 font-medium">
               dari {{ formatCurrency(campaign.target_amount, true) }}
             </div>
           </div>
@@ -114,8 +114,8 @@ const progress = computed(() => {
             <div class="text-sm font-extrabold text-blue-600">
               {{ progress.toFixed(0) }}%
             </div>
-            <div class="text-[11px] text-slate-400">
-              tercapai
+            <div class="text-[11px] text-slate-400 font-medium">
+              terkumpul
             </div>
           </div>
         </div>

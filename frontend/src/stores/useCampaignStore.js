@@ -67,7 +67,7 @@ export const useCampaignStore = defineStore('campaign', () => {
       const data = response.data.data || response.data
       currentCampaign.value = data
       return data
-    } catch (error) {
+    } catch {
       currentCampaign.value = null
       return null
     } finally {

@@ -239,10 +239,11 @@ function confirmPayment() {
           <button
             @click="confirmPayment"
             :disabled="isSubmitting"
-            class="flex-2 py-3 px-6 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2"
+            class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm shadow-glow-amber transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.98]"
           >
             <i v-if="isSubmitting" class="pi pi-spin pi-spinner text-xs"></i>
-            <span>{{ isSubmitting ? 'Memproses...' : 'Bayar Sekarang' }}</span>
+            <i v-else class="pi pi-bolt text-xs"></i>
+            <span>{{ isSubmitting ? 'Memproses Transaksi...' : 'Konfirmasi & Bayar Sekarang' }}</span>
           </button>
         </div>
       </div>

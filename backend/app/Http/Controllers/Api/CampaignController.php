@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteCampaignRequest;
+use App\Http\Requests\IndexCampaignRequest;
 use App\Http\Requests\StoreCampaignRequest;
 use App\Http\Requests\SubmitCampaignReviewRequest;
 use App\Http\Requests\UpdateCampaignRequest;
@@ -22,22 +23,8 @@ class CampaignController extends Controller
     ) {
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(IndexCampaignRequest $request): JsonResponse
     {
-        $request->validate([
-            'category' => ['nullable', 'string', 'exists:categories,slug'],
-            'status' => ['nullable', 'string', 'in:draft,review,active,success,failed'],
-            'scope' => ['nullable', 'string', 'in:mine,public'],
-            'sort' => ['nullable', 'string', 'in:latest,oldest,popular'],
-            'search' => ['nullable', 'string', 'max:255'],
-            'min_amount' => ['nullable', 'numeric', 'min:0'],
-            'max_amount' => ['nullable', 'numeric', 'min:0'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
-        ]);
-
         $perPage = (int) $request->query('per_page', 10);
         $perPage = min(max($perPage, 1), 50);
 

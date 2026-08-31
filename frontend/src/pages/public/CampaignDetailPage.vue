@@ -425,10 +425,11 @@ onMounted(async () => {
               <button
                 v-else-if="campaign.status === 'active'"
                 @click="handleOpenBacking()"
-                class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-extrabold text-sm shadow-xl shadow-blue-600/25 transition-all duration-200 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm sm:text-base shadow-glow-amber transition-all duration-300 transform hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2.5 tracking-tight"
               >
-                <i class="pi pi-heart-fill text-rose-300"></i>
-                <span>Dukung Kampanye Ini</span>
+                <i class="pi pi-bolt text-slate-950 text-base"></i>
+                <span>Dukung Kampanye Sekarang</span>
+                <i class="pi pi-arrow-right text-xs"></i>
               </button>
 
               <!-- 4. Draft Status -->

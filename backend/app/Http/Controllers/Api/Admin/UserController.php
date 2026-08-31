@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\UserService;
@@ -16,15 +17,8 @@ class UserController extends Controller
     ) {
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(IndexUserRequest $request): JsonResponse
     {
-        $request->validate([
-            'role' => ['nullable', 'string', 'in:backer,creator,admin'],
-            'is_suspended' => ['nullable', 'boolean'],
-            'search' => ['nullable', 'string', 'max:255'],
-            'page' => ['nullable', 'integer', 'min:1'],
-        ]);
-
         $query = User::query();
 
         if ($request->filled('role')) {
